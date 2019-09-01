@@ -1,5 +1,15 @@
-0.6.2 (???)
+0.7.0 (2019-02-05)
+    * Added parameterized_class feature, for parameterizing entire test
+      classes (many thanks to @TobyLL for their suggestions and help testing!)
+    * Fix DeprecationWarning on `inspect.getargs` (thanks @brettdh;
+      https://github.com/wolever/parameterized/issues/67)
+
+0.6.2 (2018-03-11)
     * Make sure that `setUp` and `tearDown` methods work correctly (#40)
+    * Raise a ValueError when input is empty (thanks @danielbradburn;
+      https://github.com/wolever/parameterized/pull/48)
+    * Fix the order when number of cases exceeds 10 (thanks @ntflc;
+      https://github.com/wolever/parameterized/pull/49)
 
 0.6.1 (2017-03-21)
     * Rename package from nose-parameterized to parameterized. A

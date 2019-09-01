@@ -1,7 +1,14 @@
 Parameterized testing with any Python test framework
 ====================================================
 
-.. image:: https://travis-ci.org/wolever/parameterized.svg?branch=master
+|pypi| |travis|
+
+.. |pypi| image:: https://img.shields.io/pypi/v/parameterized.svg
+    :alt: PyPI
+    :target: https://pypi.org/project/parameterized/
+
+.. |travis| image:: https://travis-ci.org/wolever/parameterized.svg?branch=master
+    :alt: Travis CI
     :target: https://travis-ci.org/wolever/parameterized
 
 Parameterized testing in Python sucks.
@@ -11,66 +18,99 @@ parameterized testing for py.test, parameterized testing for unittest.
 
 .. code:: python
 
-    # test_math.py
-    from nose.tools import assert_equal
-    from parameterized import parameterized
+   # test_math.py
+   from nose.tools import assert_equal
+   from parameterized import parameterized, parameterized_class
 
-    import unittest
-    import math
+   import unittest
+   import math
 
-    @parameterized([
-        (2, 2, 4),
-        (2, 3, 8),
-        (1, 9, 1),
-        (0, 9, 0),
-    ])
-    def test_pow(base, exponent, expected):
-        assert_equal(math.pow(base, exponent), expected)
+   @parameterized([
+       (2, 2, 4),
+       (2, 3, 8),
+       (1, 9, 1),
+       (0, 9, 0),
+   ])
+   def test_pow(base, exponent, expected):
+      assert_equal(math.pow(base, exponent), expected)
 
-    class TestMathUnitTest(unittest.TestCase):
-        @parameterized.expand([
-            ("negative", -1.5, -2.0),
-            ("integer", 1, 1.0),
-            ("large fraction", 1.6, 1),
-        ])
-        def test_floor(self, name, input, expected):
-            assert_equal(math.floor(input), expected)
+   class TestMathUnitTest(unittest.TestCase):
+      @parameterized.expand([
+          ("negative", -1.5, -2.0),
+          ("integer", 1, 1.0),
+          ("large fraction", 1.6, 1),
+      ])
+      def test_floor(self, name, input, expected):
+          assert_equal(math.floor(input), expected)
+
+   @parameterized_class(('a', 'b', 'expected_sum', 'expected_product'), [
+      (1, 2, 3, 2),
+      (5, 5, 10, 25),
+   ])
+   class TestMathClass(unittest.TestCase):
+      def test_add(self):
+         assert_equal(self.a + self.b, self.expected_sum)
+
+      def test_multiply(self):
+         assert_equal(self.a * self.b, self.expected_product)
+
+   @parameterized_class([
+      { "a": 3, "expected": 2 },
+      { "b": 5, "expected": -4 },
+   ])
+   class TestMathClassDict(unittest.TestCase):
+      a = 1
+      b = 1
+
+      def test_subtract(self):
+         assert_equal(self.a - self.b, self.expected)
+
 
 With nose (and nose2)::
 
     $ nosetests -v test_math.py
-    test_math.test_pow(2, 2, 4) ... ok
-    test_math.test_pow(2, 3, 8) ... ok
-    test_math.test_pow(1, 9, 1) ... ok
-    test_math.test_pow(0, 9, 0) ... ok
     test_floor_0_negative (test_math.TestMathUnitTest) ... ok
     test_floor_1_integer (test_math.TestMathUnitTest) ... ok
     test_floor_2_large_fraction (test_math.TestMathUnitTest) ... ok
+    test_math.test_pow(2, 2, 4, {}) ... ok
+    test_math.test_pow(2, 3, 8, {}) ... ok
+    test_math.test_pow(1, 9, 1, {}) ... ok
+    test_math.test_pow(0, 9, 0, {}) ... ok
+    test_add (test_math.TestMathClass_0) ... ok
+    test_multiply (test_math.TestMathClass_0) ... ok
+    test_add (test_math.TestMathClass_1) ... ok
+    test_multiply (test_math.TestMathClass_1) ... ok
+    test_subtract (test_math.TestMathClassDict_0) ... ok
 
     ----------------------------------------------------------------------
-    Ran 7 tests in 0.002s
+    Ran 12 tests in 0.015s
 
     OK
 
 As the package name suggests, nose is best supported and will be used for all
 further examples.
 
+
 With py.test (version 2.0 and above)::
 
     $ py.test -v test_math.py
-    ============================== test session starts ==============================
-    platform darwin -- Python 2.7.2 -- py-1.4.30 -- pytest-2.7.1
-    collected 7 items
+    ============================= test session starts ==============================
+    platform darwin -- Python 3.6.1, pytest-3.1.3, py-1.4.34, pluggy-0.4.0
+    collecting ... collected 13 items
 
     test_math.py::test_pow::[0] PASSED
     test_math.py::test_pow::[1] PASSED
     test_math.py::test_pow::[2] PASSED
     test_math.py::test_pow::[3] PASSED
-    test_math.py::TestMathUnitTest::test_floor_0_negative
-    test_math.py::TestMathUnitTest::test_floor_1_integer
-    test_math.py::TestMathUnitTest::test_floor_2_large_fraction
-
-    =========================== 7 passed in 0.10 seconds ============================
+    test_math.py::TestMathUnitTest::test_floor_0_negative PASSED
+    test_math.py::TestMathUnitTest::test_floor_1_integer PASSED
+    test_math.py::TestMathUnitTest::test_floor_2_large_fraction PASSED
+    test_math.py::TestMathClass_0::test_add PASSED
+    test_math.py::TestMathClass_0::test_multiply PASSED
+    test_math.py::TestMathClass_1::test_add PASSED
+    test_math.py::TestMathClass_1::test_multiply PASSED
+    test_math.py::TestMathClassDict_0::test_subtract PASSED
+    ==================== 12 passed, 4 warnings in 0.16 seconds =====================
 
 With unittest (and unittest2)::
 
@@ -78,14 +118,50 @@ With unittest (and unittest2)::
     test_floor_0_negative (test_math.TestMathUnitTest) ... ok
     test_floor_1_integer (test_math.TestMathUnitTest) ... ok
     test_floor_2_large_fraction (test_math.TestMathUnitTest) ... ok
+    test_add (test_math.TestMathClass_0) ... ok
+    test_multiply (test_math.TestMathClass_0) ... ok
+    test_add (test_math.TestMathClass_1) ... ok
+    test_multiply (test_math.TestMathClass_1) ... ok
+    test_subtract (test_math.TestMathClassDict_0) ... ok
 
     ----------------------------------------------------------------------
-    Ran 3 tests in 0.000s
+    Ran 8 tests in 0.001s
 
     OK
 
 (note: because unittest does not support test decorators, only tests created
 with ``@parameterized.expand`` will be executed)
+
+With green::
+
+    $ green test_math.py -vvv
+    test_math
+      TestMathClass_1
+    .   test_method_a
+    .   test_method_b
+      TestMathClass_2
+    .   test_method_a
+    .   test_method_b
+      TestMathClass_3
+    .   test_method_a
+    .   test_method_b
+      TestMathUnitTest
+    .   test_floor_0_negative
+    .   test_floor_1_integer
+    .   test_floor_2_large_fraction
+      TestMathClass_0
+    .   test_add
+    .   test_multiply
+      TestMathClass_1
+    .   test_add
+    .   test_multiply
+      TestMathClassDict_0
+    .   test_subtract
+
+    Ran 12 tests in 0.121s
+
+    OK (passes=9)
+
 
 Installation
 ------------
@@ -109,10 +185,14 @@ __ https://travis-ci.org/wolever/parameterized
    * -
      - Py2.6
      - Py2.7
-     - Py3.3
      - Py3.4
+     - Py3.5
+     - Py3.6
+     - Py3.7
      - PyPy
    * - nose
+     - yes
+     - yes
      - yes
      - yes
      - yes
@@ -124,7 +204,11 @@ __ https://travis-ci.org/wolever/parameterized
      - yes
      - yes
      - yes
+     - yes
+     - yes
    * - py.test
+     - yes
+     - yes
      - yes
      - yes
      - yes
@@ -137,6 +221,8 @@ __ https://travis-ci.org/wolever/parameterized
      - yes
      - yes
      - yes
+     - yes
+     - yes
    * - | unittest2
        | (``@parameterized.expand``)
      - yes
@@ -144,6 +230,15 @@ __ https://travis-ci.org/wolever/parameterized
      - yes
      - yes
      - yes
+     - yes
+     - yes
+
+*Note*: py.test 4 is `not yet supported`__ (but coming!), and py.test 2 under
+Python 3 `does not appear to work`__. Please comment on the related issues if
+you are affected.
+
+__ https://github.com/wolever/parameterized/issues/34
+__ https://github.com/wolever/parameterized/issues/71
 
 Dependencies
 ------------
@@ -349,6 +444,98 @@ with the ``doc_func`` argument:
     Ran 4 tests in 0.001s
 
     OK
+
+Finally ``@parameterized_class`` parameterizes an entire class, using
+either a list of attributes, or a list of dicts that will be applied to the
+class:
+
+.. code:: python
+
+   from yourapp.models import User
+   from parameterized import parameterized_class
+
+   @parameterized_class(("username", "access_level", "expected_status_code"), [
+      ("user_1", 1, 200),
+      ("user_2", 2, 404)
+   ])
+   class TestUserAccessLevel(TestCase):
+      def setUp(self):
+         self.client.force_login(User.objects.get(username=self.username)[0])
+
+      def test_url_a(self):
+         response = self.client.get("/url")
+         self.assertEqual(response.status_code, self.expected_status_code)
+
+      def tearDown(self):
+         self.client.logout()
+
+
+   @parameterized_class([
+      { "username": "user_1", "access_level": 1 },
+      { "username": "user_2", "access_level": 2, "expected_status_code": 404 },
+   ])
+   class TestUserAccessLevel(TestCase):
+      expected_status_code = 200
+
+      def setUp(self):
+         self.client.force_login(User.objects.get(username=self.username)[0])
+
+      def test_url_a(self):
+         response = self.client.get('/url')
+         self.assertEqual(response.status_code, self.expected_status_code)
+
+      def tearDown(self):
+         self.client.logout()
+
+Using with Single Parameters
+............................
+
+If a test function only accepts one parameter and the value is not iterable,
+then it is possible to supply a list of values without wrapping each one in a
+tuple:
+
+.. code:: python
+
+   @parameterized([1, 2, 3])
+   def test_greater_than_zero(value):
+      assert value > 0
+
+Note, however, that if the single parameter *is* iterable (such as a list or
+tuple), then it *must* be wrapped in a tuple, list, or the ``param(...)``
+helper:
+
+.. code:: python
+
+   @parameterized([
+      ([1, 2, 3], ),
+      ([3, 3], ),
+      ([6], ),
+   ])
+   def test_sums_to_6(numbers):
+      assert sum(numbers) == 6
+
+(note, also, that Python requires single element tuples to be defined with a
+trailing comma: ``(foo, )``)
+
+
+Using with ``mock.patch``
+.........................
+
+``parameterized`` can be used with ``mock.patch``, but the argument ordering
+can be confusing. The ``@mock.patch(...)`` decorator must come *below* the
+``@parameterized(...)``, and the mocked parameters must come *last*:
+
+.. code:: python
+
+   @mock.patch("os.getpid")
+   class TestOS(object):
+      @parameterized(...)
+      @mock.patch("os.fdopen")
+      @mock.patch("os.umask")
+      def test_method(self, param1, param2, ..., mock_umask, mock_fdopen, mock_getpid):
+         ...
+
+Note: the same holds true when using ``@parameterized.expand``.
 
 
 Migrating from ``nose-parameterized`` to ``parameterized``
